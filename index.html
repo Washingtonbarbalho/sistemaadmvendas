@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestor Integrado - App</title>
     
-    <!-- Configurações PWA -->
+    <!-- Configurações PWA (Cor da barra do topo do celular) -->
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Gestão App">
     
-    <link rel="manifest" href="manifest.json">
+    <!-- Link Dinâmico para o Manifest Embutido -->
+    <link rel="manifest" id="dynamic-manifest">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     
@@ -21,39 +22,15 @@
     <!-- Babel para JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- ESTILOS EMBUTIDOS -->
     <style>
-        .no-scrollbar::-webkit-scrollbar { 
-            display: none; 
-        }
-        .no-scrollbar { 
-            -ms-overflow-style: none; 
-            scrollbar-width: none; 
-        }
-
-        @keyframes fade-in { 
-            from { opacity: 0; transform: translateY(10px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-        .animate-fade-in { 
-            animation: fade-in 0.3s ease-out forwards; 
-        }
-
-        input[type="date"] { 
-            min-height: 48px; 
-        }
-
-        input::-webkit-outer-spin-button, 
-        input::-webkit-inner-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-
-        body {
-            background-color: #f1f5f9;
-            color: #1e293b;
-            -webkit-font-smoothing: antialiased;
-            -webkit-tap-highlight-color: transparent;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        input[type="date"] { min-height: 48px; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        body { background-color: #f1f5f9; color: #1e293b; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased selection:bg-yellow-200 selection:text-yellow-900">
@@ -90,14 +67,12 @@
 
         // --- HELPERS ---
         const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-
         const parseMoney = (valStr) => {
             if (!valStr) return 0;
             if (typeof valStr === 'number') return valStr;
             const clean = valStr.replace(/\./g, '').replace(',', '.');
             return parseFloat(clean) || 0;
         };
-
         const maskMoney = (value) => {
             if(value === undefined || value === null) return "0,00";
             let v = String(value).replace(/\D/g, "");
@@ -106,14 +81,12 @@
             v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
             return v;
         };
-
         const maskPhone = (v) => {
             v = v.replace(/\D/g, "");
             v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
             v = v.replace(/(\d)(\d{4})$/, "$1-$2");
             return v;
         };
-
         const maskCpfCnpj = (v) => {
             v = v.replace(/\D/g, "");
             if (v.length <= 11) {
@@ -128,19 +101,16 @@
             }
             return v;
         };
-
         const maskCep = (v) => {
             v = v.replace(/\D/g, "");
             v = v.replace(/^(\d{5})(\d)/, "$1-$2");
             return v.slice(0, 9);
         };
-
         const formatDateTime = (dateStr) => {
             if (!dateStr) return '--/--/---- --:--';
             const date = new Date(dateStr);
             return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
         };
-
         const getBrazilDateString = () => {
             const date = new Date();
             return date.toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
@@ -383,7 +353,6 @@
                 let history = [];
                 if (!product) return history;
 
-                // 1. Manuais
                 if (product.movements && Array.isArray(product.movements)) {
                     product.movements.forEach(m => {
                         history.push({
@@ -398,12 +367,10 @@
                     });
                 }
                 
-                // 2. Automáticos (Vendas)
                 if (salesHistory && Array.isArray(salesHistory)) {
                     salesHistory.forEach(sale => {
                         const itemMatch = sale.items?.find(i => i.productId === product.id);
                         if (itemMatch) {
-                            // Tenta pegar o preço do histórico da venda, senão pega o atual
                             const salePriceItem = itemMatch.price !== undefined ? itemMatch.price : product.salePrice;
                             
                             history.push({
@@ -810,19 +777,16 @@
         const CatalogApp = ({ user, userProfile, onLogout }) => {
             const [view, setView] = useState('products'); 
             
-            // Dados
             const [products, setProducts] = useState([]);
             const [customers, setCustomers] = useState([]);
             const [sales, setSales] = useState([]);
 
-            // Pesquisa e Paginação
             const [productSearch, setProductSearch] = useState('');
             const [customerSearch, setCustomerSearch] = useState('');
             const [productPage, setProductPage] = useState(1);
             const [customerPage, setCustomerPage] = useState(1);
             const ITEMS_PER_PAGE = 12;
 
-            // Modais
             const [productModalData, setProductModalData] = useState({ open: false, data: null });
             const [customerModalData, setCustomerModalData] = useState({ open: false, data: null });
             const [productDetailsData, setProductDetailsData] = useState({ open: false, data: null });
@@ -1134,15 +1098,33 @@
         root.render(<App />);
     </script>
     
-    <!-- Registro do Service Worker (PWA) -->
+    <!-- LÓGICA DE INSTALAÇÃO DO APP EMBUTIDA (GERADOR DINÂMICO DE MANIFEST) -->
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker Registrado com sucesso:', reg))
-                    .catch(err => console.error('Erro ao registrar Service Worker:', err));
-            });
-        }
+        // Cria as configurações do App em tempo real e insere no cabeçalho
+        const manifestApp = {
+            "name": "Gestor Integrado - Cadastros",
+            "short_name": "Gestão App",
+            "start_url": window.location.href, // Link onde estiver hospedado
+            "display": "standalone",
+            "background_color": "#f1f5f9",
+            "theme_color": "#0f172a",
+            "orientation": "portrait",
+            "icons": [
+                { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+                { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+            ]
+        };
+        
+        // Transforma o objeto em um arquivo virtual
+        const blob = new Blob([JSON.stringify(manifestApp)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        document.getElementById('dynamic-manifest').setAttribute('href', manifestURL);
+
+        // Prepara o navegador para instalar
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // O navegador cuida automaticamente de oferecer "Adicionar à Tela Inicial"
+            console.log("Sistema de Gestão pronto para instalação no celular!");
+        });
     </script>
 </body>
 </html>
